@@ -1,0 +1,26 @@
+# tactiq.io free youtube transcript
+# What is Business Process Management? (In About A Minute)
+# https://www.youtube.com/watch/3m9gJjxkm58
+
+00:00:04.770 Jamison Cush: Business process management, or BPM,
+00:00:07.200 is a structured approach to improving processes
+00:00:09.690 that help accomplish business goals. These
+00:00:11.850 processes might include developing a new product,
+00:00:14.670 fulfilling product orders, managing customer
+00:00:17.130 service, or assimilating a new employee. A single
+00:00:20.700 business process can involve hundreds or even
+00:00:22.710 thousands of tasks accomplished by people, IT
+00:00:25.680 systems, machinery, and outside providers. A
+00:00:28.650 well-designed business process breaks these tasks
+00:00:31.560 into structured repeatable steps in order to yield
+00:00:34.410 consistent results, predict resource allocation
+00:00:37.380 and identify bottlenecks and weaknesses. The BPM
+00:00:40.650 lifecycle typically includes five steps: design
+00:00:44.250 the ideal business process, model the process and
+00:00:46.980 various scenarios, implement the process and
+00:00:49.770 necessary improvements, monitor the improvements
+00:00:53.280 and optimize the business process on an ongoing
+00:00:55.560 basis. A well-executed BPM program can eliminate
+00:00:59.220 waste, cut errors, save time, improve compliance,
+00:01:02.700 increase agility, support digital transformation
+00:01:05.400 and ultimately improve customer service.
