@@ -5,7 +5,8 @@ if (!isset($_SESSION['id'])) {
   header('location:../login.php');
   exit;
 }
-include '../config/config.php';
+require_once '../config/config.php';
+
 class data extends Connection
 {
   public function managedata()
@@ -15,6 +16,9 @@ class data extends Connection
     <html>
 
     <head><?php include 'head.php'; ?>
+      <style>
+        /* Custom DataTables Button Style */
+      </style>
     </head>
 
     <body class="hold-transition skin-blue sidebar-mini">
@@ -115,161 +119,147 @@ class data extends Connection
           </div>
         <?php endif; ?>
         <?php if ($_SESSION['type'] == 0): ?>
-          <div class="content-wrapper" style="height: 100vh;background-color: #f9f9f9;overflow-y: auto;">
+          <div class="content-wrapper" style="height: 100vh; background-color: #f4f6f9; overflow-y: auto; padding: 20px;">
             <section class="content">
-              <h3 style="text-align: center;font-style: normal; color: #3ea1db; font-weight: 600; letter-spacing: 3px;">REPORT SUMMARY</h3>
+              <h3 style="text-align: center; color: darkblue; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px;">
+                Report Summary
+              </h3>
               <div class="row">
 
+                <!-- IT Department Table (Swapped Colors) -->
                 <div class="col-lg-6 col-12" style="display: flex; justify-content: center; min-height: 80vh;">
-
-                  <table class="table table-bordered" style="" id="cs_table">
-                    <thead>
+                  <table class="table table-bordered table-hover" id="it_table" style="width: 100%; text-align: center; background-color: #ffffff; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);">
+                    <thead style="background-color: #1d4e89; color: white;"> <!-- Swapped to deep blue -->
                       <tr>
-                        <th colspan="6" style="font-style: normal;text-align: center; height: 100px; background-color: white; background-image:url('../images/cs_logo.png'); background-size: contain; background-repeat: no-repeat; background-position: center;"></th>
+                        <th colspan="6" style="height: 120px; background: white url('../images/it_logo.jpg') no-repeat center; background-size: contain;"></th>
                       </tr>
                       <tr>
-                        <th colspan="6" style="font-style: normal;text-align: center;">CS Department</th>
+                        <th colspan="6" style="font-size: 20px; padding: 10px; background-color: white; color: darkblue; text-align: center; vertical-align: middle;">IT Department</th>
                       </tr>
                       <tr>
-                        <th style="font-style: normal;">Group Name</th>
-                        <th style="font-style: normal;">Memebers</th>
-                        <th style="font-style: normal;">Adviser</th>
-                        <th style="font-style: normal;">Panelists</th>
-                        <th style="font-style: normal;">Remark</th>
-                        <th style="font-style: normal;">Group Grade</th>
+                        <th>Group Name</th>
+                        <th>Members</th>
+                        <th>Adviser</th>
+                        <th>Panelists</th>
+                        <th>Remark</th>
+                        <th>Group Grade</th>
                       </tr>
                     </thead>
                     <tbody>
                       <?php
-                      $sql = "SELECT 
-                            *, teams.status AS team_status
-                        FROM 
-                            teams 
-                        INNER JOIN 
-                            users 
-                            ON 
-                            teams.adviser_id=users.id 
-                        AND users.department='Information Technology'";
+                      $sql = "SELECT *, teams.status AS team_status FROM teams 
+                        INNER JOIN users ON teams.adviser_id = users.id 
+                        WHERE users.department='Information Technology'";
                       $stmt = $this->conn()->query($sql);
-                      $id = 1;
-                      while ($row = $stmt->fetch()) {
-                      ?>
-                        <tr>
-                          <td><?php echo ucwords($row['name']) ?></td>
-                          <td style="padding: unset;">
-                            <table class="table table-bordered" style="padding: unset;margin: unset;">
-                              <tr>
-                                <th>Name</th>
-                                <th>Grade</th>
-                              </tr>
+                      while ($row = $stmt->fetch()) { ?>
+                        <tr style="background-color: <?= $row['team_status'] == 1 ? '#e6f7e6' : '#ffffff'; ?>;">
+                          <td style="font-weight: bold;"><?= ucwords($row['name']); ?></td>
+                          <td>
+                            <?php
+                            $sql3 = "SELECT * FROM teams_member INNER JOIN users ON teams_member.users_id = users.id WHERE teams_member.teams_id = ?";
+                            $stmt3 = $this->conn()->prepare($sql3);
+                            $stmt3->execute([$row['teams_id']]);
+                            $members = $stmt3->fetchAll(); // Fetch all members
 
-                              <?php $sql3 = "SELECT * FROM teams_member 
-                        INNER JOIN users ON teams_member.users_id = users.id 
-                        WHERE teams_member.teams_id = '" . $row['teams_id'] . "'";
-                              $stmt3 = $this->conn()->query($sql3);
-                              while ($row3 = $stmt3->fetch()) { ?>
+                            if (count($members) > 0) { // Only show the table if there are members
+                            ?>
+                              <table class="table table-bordered table-sm">
                                 <tr>
-                                  <td><?php echo ucwords($row3['firstname']) ?> <?php echo ucwords($row3['lastname']) ?></td>
-                                  <td><?php echo ($row3['individual_grade'] == NULL) ? "~" : number_format($row3['individual_grade'], 2) ?></td>
+                                  <th style="width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Name</th>
+                                  <th>Grade</th>
+                                </tr>
+                                <?php foreach ($members as $row3) { ?>
+                                  <tr>
+                                    <td style="width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                      <?= ucwords($row3['firstname'] . ' ' . $row3['lastname']); ?>
+                                    </td>
+                                    <td><?= ($row3['individual_grade'] === NULL) ? "~" : number_format($row3['individual_grade'], 2); ?></td>
+                                  </tr>
+                                <?php } ?>
+                              </table>
+
+                            <?php } ?>
+                          </td>
+
+                          <td><?= ucwords($row['firstname']); ?></td>
+                          <td>
+                            <table class="table">
+                              <?php
+                              $sql4 = "SELECT * FROM panelist WHERE teams_id=?";
+                              $stmt4 = $this->conn()->prepare($sql4);
+                              $stmt4->execute([$row['teams_id']]);
+                              while ($row4 = $stmt4->fetch()) { ?>
+                                <tr>
+                                  <td><?= ucwords($row4['fullname']); ?></td>
                                 </tr>
                               <?php } ?>
                             </table>
                           </td>
-                          <td>
-                            <?php echo ucwords($row['firstname']); ?>
-                          </td>
-                          <td style="padding: unset;">
-                            <?php $sql4 = "SELECT * FROM panelist WHERE teams_id='" . $row['teams_id'] . "'";
-                            $stmt4 = $this->conn()->query($sql4);
-                            while ($row4 = $stmt4->fetch()) { ?>
-                              <table class="table" style="padding: unset;margin: unset;">
-                                <tr>
-                                  <td><?php echo ucwords($row4['fullname']) ?></td>
-                                </tr>
-                              </table>
-                            <?php } ?>
-                          </td>
-                          <td>
+                          <td style="color: <?= ($row['team_status'] == 1) ? '#28a745' : ($row['team_status'] == 2 ? '#ffc107' : '#dc3545'); ?>;">
                             <?php
-                            if ($row['team_status'] == 1) {
-                              echo "Passed";
-                            } else if ($row['team_status'] == 2) {
-                              echo "Redefense";
-                            } else if ($row['team_status'] == 3) {
-                              echo "Failed";
-                            } else if ($row['team_status'] == 0) {
-                              echo "Pending";
-                            }
+                            $status_labels = [0 => "Pending", 1 => "Passed", 2 => "Redefense", 3 => "Failed"];
+                            echo $status_labels[$row['team_status']];
                             ?>
                           </td>
-                          <td>
-                            <?php echo ($row['grade'] == NULL) ? "~" : "| " . number_format($row['grade'], 2) ?>
-                          </td>
+                          <td><?= ($row['grade'] === NULL) ? "~" : number_format($row['grade'], 2); ?></td>
                         </tr>
-                      <?php $id++;
-                      } ?>
+                      <?php } ?>
                     </tbody>
                   </table>
-
                 </div>
 
-                <div class="col-lg-6 col-12" style="display: flex; justify-content: center; min-height: 80vh; border-left: none;">
-
-                  <table class="table table-bordered" style="" id="it_table">
-                    <thead>
+                <!-- CS Department Table (Swapped Colors) -->
+                <div class="col-lg-6 col-12" style="display: flex; justify-content: center; min-height: 80vh;">
+                  <table class="table table-bordered table-hover" id="cs_table" style="width: 100%; text-align: center; background-color: #ffffff; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);">
+                    <thead style="background-color: #1d4e89; color: white;"> <!-- Swapped to deep blue -->
                       <tr>
-                        <th colspan="6" style="font-style: normal;text-align: center; height: 100px; background-image:url('../images/it_logo.jpg'), linear-gradient(to bottom, white, #dcdcdc); background-size: contain; background-repeat: no-repeat; background-position: center;"></th>
+                        <th colspan="6" style="height: 120px; background: white url('../images/cs_logo.png') no-repeat center; background-size: contain;"></th>
                       </tr>
                       <tr>
-                        <th colspan="6" style="font-style: normal;text-align: center;">IT Department</th>
+                        <th colspan="6" style="font-size: 20px; padding: 10px; background-color: white; color: darkblue; text-align: center; vertical-align: middle;">
+                          CS Department
+                        </th>
                       </tr>
                       <tr>
-                        <th style="font-style: normal;">Group Name</th>
-                        <th style="font-style: normal;">Members</th>
-                        <th style="font-style: normal;">Adviser</th>
-                        <th style="font-style: normal;">Panelists</th>
-                        <th style="font-style: normal;">Remark</th>
-                        <th style="font-style: normal;">Group Grade</th>
+                        <th>Group Name</th>
+                        <th>Members</th>
+                        <th>Adviser</th>
+                        <th>Panelists</th>
+                        <th>Remark</th>
+                        <th>Group Grade</th>
                       </tr>
                     </thead>
                     <tbody>
                       <?php
-                      $sql = "SELECT 
-                        *, teams.status AS team_status
-                        FROM 
-                            teams 
-                        INNER JOIN 
-                            users
-                            ON 
-                            teams.adviser_id=users.id 
-                        AND 
-                            users.department='Computer SCIENCE'";
+                      $sql = "SELECT *, teams.status AS team_status FROM teams 
+                        INNER JOIN users ON teams.adviser_id = users.id 
+                        WHERE users.department='Computer Science'";
                       $stmt = $this->conn()->query($sql);
-                      $id = 1;
-                      while ($row = $stmt->fetch()) {
-
-                      ?>
-                        <tr>
-                          <td><?php echo ucwords($row['name']) ?></td>
-                          <td style="padding: unset;">
-                            <table class="table table-bordered" style="padding: unset;margin: unset;">
+                      while ($row = $stmt->fetch()) { ?>
+                        <tr style="background-color: <?= $row['team_status'] == 1 ? '#e6f7e6' : '#ffffff'; ?>;">
+                          <td style="font-weight: bold;"><?= ucwords($row['name']); ?></td>
+                          <td>
+                            <table class="table table-bordered table-sm">
                               <tr>
-                                <th>Name</th>
+                                <th style="width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Name</th>
                                 <th>Grade</th>
                               </tr>
-                              <?php $sql3 = "SELECT * FROM teams_member INNER JOIN users ON teams_member.users_id=users.id WHERE teams_member.teams_id='" . $row['teams_id'] . "'";
-                              $stmt3 = $this->conn()->query($sql3);
+                              <?php
+                              $sql3 = "SELECT * FROM teams_member INNER JOIN users ON teams_member.users_id = users.id WHERE teams_member.teams_id = ?";
+                              $stmt3 = $this->conn()->prepare($sql3);
+                              $stmt3->execute([$row['teams_id']]);
                               while ($row3 = $stmt3->fetch()) { ?>
                                 <tr>
-                                  <td><?php echo ucwords($row3['firstname']) ?> <?php echo ucwords($row3['lastname']) ?></td>
-                                  <td><?php echo ($row3['individual_grade'] == NULL) ? "~" : number_format($row3['individual_grade'], 2) ?></td>
+                                  <td style="width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                    <?= ucwords($row3['firstname'] . ' ' . $row3['lastname']); ?>
+                                  </td>
+                                  <td><?= ($row3['individual_grade'] === NULL) ? "~" : number_format($row3['individual_grade'], 2); ?></td>
                                 </tr>
                               <?php } ?>
                             </table>
+
                           </td>
-                          <td>
-                            <?php echo ucwords($row['firstname']); ?>
-                          </td>
+                          <td><?= ucwords($row['firstname']); ?></td>
                           <td style="padding: unset;">
                             <?php $sql4 = "SELECT * FROM panelist WHERE teams_id='" . $row['teams_id'] . "'";
                             $stmt4 = $this->conn()->query($sql4);
@@ -281,28 +271,14 @@ class data extends Connection
                               </table>
                             <?php } ?>
                           </td>
-                          <td>
-                            <?php
-                            if ($row['team_status'] == 1) {
-                              echo "Passed";
-                            } else if ($row['team_status'] == 2) {
-                              echo "Redefense";
-                            } else if ($row['team_status'] == 3) {
-                              echo "Failed";
-                            } else if ($row['team_status'] == 0) {
-                              echo "Pending";
-                            }
-                            ?>
+                          <td style="color: <?= ($row['team_status'] == 1) ? '#28a745' : ($row['team_status'] == 2 ? '#ffc107' : '#dc3545'); ?>;">
+                            <?= $status_labels[$row['team_status']]; ?>
                           </td>
-                          <td>
-                            <?php echo ($row['grade'] == NULL) ? "~" : number_format($row['grade'], 2) ?>
-                          </td>
+                          <td><?= ($row['grade'] === NULL) ? "~" : number_format($row['grade'], 2); ?></td>
                         </tr>
-                      <?php $id++;
-                      } ?>
+                      <?php } ?>
                     </tbody>
                   </table>
-
                 </div>
 
               </div>
@@ -603,6 +579,7 @@ class data extends Connection
       <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
       <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.3.6/css/buttons.dataTables.min.css">
 
+
       <!-- DataTables JS -->
       <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
 
@@ -618,56 +595,54 @@ class data extends Connection
 
 
       <script>
-        $(document).ready(function() {
-          // Task Comment Dashboard Modal Show & Task ID Assignment
-          $('.taskcommentdashboard').click(function() {
-            // Show the modal for task comments
-            $('#taskcommentdashboard').modal('show');
+        // Task Comment Modal Show & Task ID Assignment
+        $('.taskcommentdashboard').click(function() {
+          // Show the modal for task comments
+          $('#taskcommentdashboard').modal('show');
 
-            // Set the task_id in the hidden input field
-            $('#taskcommentdashboard_task_id').val($(this).val());
+          // Set the task_id in the hidden input field
+          $('#taskcommentdashboard_task_id').val($(this).val());
 
-            // Get the task ID from the clicked button
-            const taskId = $(this).val();
+          // Get the task ID from the clicked button
+          const taskId = $(this).val();
 
-            // Send AJAX request to fetch comments
-            $.ajax({
-              url: '../controller/monitorthesisController.php',
-              type: 'POST',
-              data: {
-                view_taskcomment: true,
-                task_id: taskId
-              },
-              success: function(response) {
-                // Inject the response (comments) into the modal's comments section
-                $('#comments_section_dashboard').html(response);
-              },
-              error: function() {
-                alert('Failed to load comments. Please try again.');
-              }
-            });
+          // Send AJAX request to fetch comments
+          $.ajax({
+            url: '../controller/monitorthesisController.php',
+            type: 'POST',
+            data: {
+              view_taskcommentdashboard: true,
+              task_id: taskId
+            },
+            success: function(response) {
+              // Inject the response (comments) into the modal's comments section
+              $('#comments_section_dashboard').html(response);
+            },
+            error: function() {
+              alert('Failed to load comments. Please try again.');
+            }
           });
+        });
 
-          // Task Like Button Click & Update Like Count
-          $('.tasklike').click(function() {
-            var task_id = $(this).val(); // Get the task ID from the button value
-            var button = $(this); // Reference to the clicked button
+        // Task Like Button Click & Update Like Count
+        $('.tasklike').click(function() {
+          var task_id = $(this).val(); // Get the task ID from the button value
+          var button = $(this); // Reference to the clicked button
 
-            $.ajax({
-              url: '../controller/monitorthesisController.php',
-              type: 'POST',
-              data: {
-                tasklike: 'tasklike',
-                task_id: task_id
-              },
-              success: function(data) {
-                // Update the like count next to the button
-                button.find('.like-count').text(data);
-              },
-              error: function() {
-                alert('Failed to like this task. Please try again.');
-              }
-            });
+          $.ajax({
+            url: '../controller/monitorthesisController.php',
+            type: 'POST',
+            data: {
+              tasklike: 'tasklike',
+              task_id: task_id
+            },
+            success: function(data) {
+              // Update the like count next to the button
+              button.find('.like-count').text(data);
+            },
+            error: function() {
+              alert('Failed to like this task. Please try again.');
+            }
           });
         });
 

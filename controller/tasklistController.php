@@ -20,7 +20,8 @@ class controller extends Connection
             $status = $_POST['status'];
 
             if (empty($user_ids) || !is_array($user_ids)) {
-                die("Error: Please select at least one member.");
+                echo "<script>alert('Error: Please select at least one member.'); window.history.back();</script>";
+                exit;
             }
 
             $sql = "SELECT teams_id FROM teams_member WHERE users_id = ?";
@@ -29,7 +30,8 @@ class controller extends Connection
             $row = $stmt->fetch();
 
             if (!$row) {
-                die("Error: No team associated with the logged-in user.");
+                echo "<script>alert('Error: No team associated with the logged-in user.'); window.history.back();</script>";
+                exit;
             }
 
             $teams_id = $row['teams_id'];
@@ -43,7 +45,8 @@ class controller extends Connection
             $row = $stmt->fetch();
 
             if (!$row) {
-                die("Error: Task creation failed.");
+                echo "<script>alert('Error: Task creation failed.'); window.history.back();</script>";
+                exit;
             }
 
             $task_id = $row['task_id'];
@@ -54,9 +57,9 @@ class controller extends Connection
                 $stmt->execute([$task_id, $teams_id, $user_id]);
             }
 
-            echo "<script type='text/javascript'>alert('Successfully added task!');</script>";
-            echo "<script>window.location.href='../admin/tasklist.php';</script>";
+            echo "<script>alert('Successfully added task!'); window.location.href='../admin/tasklist.php';</script>";
         }
+
 
 
 
@@ -96,7 +99,14 @@ class controller extends Connection
             $groupname = $row['name'];
             $adviser_id = $row['adviser_id'];
             $users_id = $_SESSION['id'];
-            $notes = "New file uploaded by the group ($groupname)";
+            // Get the deadline name using setdeadline_id
+            $sql = "SELECT name FROM setdeadline WHERE setdeadline_id = ?";
+            $stmt = $this->conn()->prepare($sql);
+            $stmt->execute([$setdeadline_id]);
+            $row = $stmt->fetch();
+            $file_title = $row['name'];
+
+            $notes = "$file is uploaded by the group ($groupname) in $file_title";
 
             $sql = "INSERT INTO reminder_adviser (users_id,adviser_id,notes) VALUES (?,?,?)";
             $stmt = $this->conn()->prepare($sql);

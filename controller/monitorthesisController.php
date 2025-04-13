@@ -64,8 +64,32 @@ class controller extends Connection
             exit;
         }
 
+        if (isset($_POST['view_taskcommentdashboard'])) {
+            $task_id = $_POST['task_id'];
 
+            // Fetch comments along with adviser's first name
+            $sql = "SELECT task_comment.comment, users.firstname 
+                    FROM task_comment
+                    JOIN users ON task_comment.users_id = users.id
+                    WHERE task_comment.task_id = ?";
 
+            $stmt = $this->conn()->prepare($sql);
+            $stmt->execute([$task_id]);
+
+            $comments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $comments_html = '';
+            if ($comments) {
+                foreach ($comments as $comment) {
+                    $comments_html .= '<p><strong>' . htmlspecialchars($comment['firstname']) . ':</strong> ' . htmlspecialchars($comment['comment']) . '</p>';
+                }
+            } else {
+                $comments_html .= '<p>No comments found for this task.</p>';
+            }
+
+            echo $comments_html;
+            exit;
+        }
 
         if (isset($_POST['tasklike'])) {
 

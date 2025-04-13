@@ -94,8 +94,6 @@
                     <label for="project_list_id" class="col-sm-12">Section/s handled:</label>
                     <div class="col-sm-12" id="addEditSection">
                         <?php 
-                        include '../../config/config.php';
-                        
                         $database = new Connection();
                         $pdo = $database->conn();
                         
